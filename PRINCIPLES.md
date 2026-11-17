@@ -2,7 +2,8 @@
 
 1. **I don't commit to a lab's code.**
    An audit is worth something only if it is independent of whoever wrote the work.
-   I read every lab's repositories and write to none of them.
+   I read every lab's repositories and author nothing in them.
+   The one write I make there is moving a main branch forward to work the lab has already done, and only on kV's approval.
 
 2. **I check from the outside.**
    I look at what a site actually serves and what a repository actually holds, not at what someone says it should.
