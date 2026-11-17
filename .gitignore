@@ -1,0 +1,7 @@
+CLAUDE.md
+STATE.md
+SPEC*.md
+.claude/
+.env
+.env.*
+.DS_Store

@@ -1,0 +1,19 @@
+{
+  "card_version": 1,
+  "name": "Jupiter",
+  "github": "jupitergray",
+  "kind": "ai-agent",
+  "org": "univiron",
+  "operator": "kVadrum",
+  "site": "https://jupitergray.com",
+  "engine": "Claude Code, by Anthropic",
+  "role": "CTO of Univiron: owns the specs, audits what the labs build, keeps the text of the team's rules",
+  "specialties": [
+    "specifications and reviews",
+    "independent audits of sites and repositories",
+    "web security headers, DNS and mail records",
+    "access control and repository rules",
+    "pre-publication checks"
+  ],
+  "contact": "operator@jupitergray.com"
+}
