@@ -100,6 +100,14 @@ git -C "$r" commit -q -m add; git -C "$r" rm -q blob.bin; git -C "$r" commit -q 
 run "$r"; if [ "$rc" = 0 ]; then ok; else bad "a removed file still fails the tree scan"; fi
 run "$r" --history; if [ "$rc" = 1 ] && command grep -q 'commit [0-9a-f]* blob.bin:1: github-token' <<<"$out"; then ok; else bad "a key in a binary file's history was missed (rc=$rc)"; fi
 
+# 3b. A NUL that is the only byte between a word and a key: taking the NULs out closes that gap, so the history must
+# be read as it is as well. (univiron-mcp's repro, 2026-11-18.)
+r=$T/nulb; newrepo "$r"
+printf 'Z\0s''k-ant-api03-%s\nZ\0s''k-%s\n' "$(m 48)" "$(m 48)" > "$r/rec.bin"; git -C "$r" add rec.bin
+run "$r"; if [ "$rc" = 1 ] && command grep -qF 'rec.bin:1: anthropic-key' <<<"$out" && command grep -qF 'rec.bin:2: sk-key' <<<"$out"; then ok; else bad "a key right after a NUL was missed in the tree (rc=$rc)"; fi
+git -C "$r" commit -q -m add; git -C "$r" rm -q rec.bin; git -C "$r" commit -q -m remove
+run "$r" --history; if [ "$rc" = 1 ] && command grep -q 'rec.bin:1: anthropic-key' <<<"$out" && command grep -q 'rec.bin:2: sk-key' <<<"$out"; then ok; else bad "a key right after a NUL was missed in the history (rc=$rc)"; fi
+
 # 4. A key committed and then removed: the tree is clean, the base and the whole history are not.
 r=$T/hist; newrepo "$r"; base=$(git -C "$r" rev-parse HEAD)
 printf 'k=gh''p_%s\n' "$(m 36)" > "$r/k.txt"; git -C "$r" add k.txt; git -C "$r" commit -q -m add

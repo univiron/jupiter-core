@@ -102,6 +102,8 @@ printf 'probe\n' > "$work/probe"
 got=$(printf '%s\0' "$work/probe" | xargs -0 -r grep -HanZE -e 'pro+be' -- 2>/dev/null | tr '\0' '|')
 [ "$got" = "$work/probe|1:probe" ] || setup "this grep does not answer -HanZE the way the scan reads it (GNU grep is needed)"
 [ "$(command grep -anE -e 'pro+be' "$work/probe" 2>/dev/null | cut -d: -f1)" = 1 ] || setup "this grep does not answer -anE the way the scan reads it"
+[ "$(command grep -ahnE -e 'pro+be' "$work/probe" "$work/probe" 2>/dev/null | cut -d: -f1 | tr '\n' ' ')" = '1 1 ' ] ||
+  setup "this grep does not answer -ahnE over two files the way the scan reads it"
 for i in "${!res[@]}"; do
   command grep -qE -e "${res[$i]}" "$work/probe" 2>/dev/null; [ $? -le 1 ] || setup "this grep rejects the ${names[$i]} pattern"
 done
@@ -142,7 +144,9 @@ done < <(git ls-files -z | xargs -0 -r grep -LZI -e '' -- 2>/dev/null)
 # hunk's remaining counts, so an added line reading "++ b/x" (shown as "+++ b/x") stays content, and an empty line
 # is context (diff.suppressBlankEmpty prints one so). A merge is read as its diff against its first parent.
 # --text: a binary file's change is printed as lines too, not as "Binary files differ". The NUL bytes are taken out
-# of the whole log, so a line of UTF-16 text reads as plain text here as well; the line count is unchanged.
+# of the whole log, so a line of UTF-16 text reads as plain text here as well; the line count is unchanged. Both logs
+# are searched, as the tree's files are: a NUL can be the byte that ends the word before a key, and taking it out
+# closes the gap the pattern needs ("Z", NUL, "sk-..." reads "Zsk-...").
 if [ -n "$base" ]; then
   git log -p --text --no-color --no-ext-diff --no-textconv --no-renames --diff-merges=first-parent \
     --src-prefix=a/ --dst-prefix=b/ --format='commit %H' "$range" > "$work/log.raw" || setup "git log failed on $range"
@@ -166,7 +170,7 @@ if [ -n "$base" ]; then
       else if (c == " " || $0 == "") { line++; old--; new-- }
     }' "$work/log" > "$work/added"
   for i in "${!res[@]}"; do
-    command grep -anE -e "${res[$i]}" "$work/log" | cut -d: -f1 > "$work/at"
+    command grep -ahnE -e "${res[$i]}" "$work/log.raw" "$work/log" | cut -d: -f1 > "$work/at"
     [ -s "$work/at" ] || continue
     awk -F '\t' -v name="${names[$i]}" 'FILENAME == ARGV[1] { hit[$1] = 1; next } $1 in hit { print "  commit " $2 " " $3 ":" $4 ": " name }' \
       "$work/at" "$work/added" >> "$work/hits"
