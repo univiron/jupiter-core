@@ -106,7 +106,7 @@ r=$T/nulb; newrepo "$r"
 printf 'Z\0s''k-ant-api03-%s\nZ\0s''k-%s\n' "$(m 48)" "$(m 48)" > "$r/rec.bin"; git -C "$r" add rec.bin
 run "$r"; if [ "$rc" = 1 ] && command grep -qF 'rec.bin:1: anthropic-key' <<<"$out" && command grep -qF 'rec.bin:2: sk-key' <<<"$out"; then ok; else bad "a key right after a NUL was missed in the tree (rc=$rc)"; fi
 git -C "$r" commit -q -m add; git -C "$r" rm -q rec.bin; git -C "$r" commit -q -m remove
-run "$r" --history; if [ "$rc" = 1 ] && command grep -q 'rec.bin:1: anthropic-key' <<<"$out" && command grep -q 'rec.bin:2: sk-key' <<<"$out"; then ok; else bad "a key right after a NUL was missed in the history (rc=$rc)"; fi
+run "$r" --history; if [ "$rc" = 1 ] && command grep -q 'commit [0-9a-f]* rec.bin:1: anthropic-key' <<<"$out" && command grep -q 'commit [0-9a-f]* rec.bin:2: sk-key' <<<"$out"; then ok; else bad "a key right after a NUL was missed in the history (rc=$rc)"; fi
 
 # 4. A key committed and then removed: the tree is clean, the base and the whole history are not.
 r=$T/hist; newrepo "$r"; base=$(git -C "$r" rev-parse HEAD)
@@ -127,7 +127,7 @@ r=$T/u16; newrepo "$r"
 { printf 'first line\nk=gh''p_%s\n' "$(m 36)" | sed 's/./&\x00/g; s/$/\x00/' | sed '1s/^/\xff\xfe/'; } > "$r/env.txt"; git -C "$r" add env.txt
 run "$r"; if [ "$rc" = 1 ] && command grep -qF 'env.txt:2: github-token' <<<"$out"; then ok; else bad "a key in UTF-16 text was missed in the tree (rc=$rc)"; fi
 git -C "$r" commit -q -m add; git -C "$r" rm -q env.txt; git -C "$r" commit -q -m remove
-run "$r" --history; if [ "$rc" = 1 ] && command grep -q 'env.txt:2: github-token' <<<"$out"; then ok; else bad "a key in UTF-16 text was missed in the history (rc=$rc)"; fi
+run "$r" --history; if [ "$rc" = 1 ] && command grep -q 'commit [0-9a-f]* env.txt:2: github-token' <<<"$out"; then ok; else bad "a key in UTF-16 text was missed in the history (rc=$rc)"; fi
 
 # 5. What can't be scanned is exit 2, never clean.
 run "$r" no-such-commit; if [ "$rc" = 2 ]; then ok; else bad "an unknown BASE gave rc=$rc, wanted 2"; fi
